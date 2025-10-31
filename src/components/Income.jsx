@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Bar, BarChart, Tooltip, XAxis, YAxis } from 'recharts';
 import { useAppContext } from '../context/context'
-import { ArrowDownRight, ArrowUpRight, Download, Plus } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Download, Plus, Trash2 } from 'lucide-react';
 import { Income as IncomeAPI } from '../api';
+import toast from 'react-hot-toast';
 
 const Income = () => {
     const { internalActiveSection } = useAppContext();
@@ -13,7 +14,7 @@ const Income = () => {
 
     // small emoji set to choose from (can be extended)
     const EMOJIS = [
-        '💰','💵','🧾','💼','🏦','🪙','📈','🛍️','🎁','🍔','🚗','✈️','🏠','🧸','🎮','🩺','📚','🎓','⚽','🎵'
+        '💰', '💵', '🧾', '💼', '🏦', '🪙', '📈', '🛍️', '🎁', '🍔', '🚗', '✈️', '🏠', '🧸', '🎮', '🩺', '📚', '🎓', '⚽', '🎵'
     ];
 
     // Fetch incomes from server
@@ -72,7 +73,40 @@ const Income = () => {
         return acc;
     }, {}));
 
-    const transactions = incomes.slice().sort((a,b)=> new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+    const transactions = incomes.slice().sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+    const handleDownload = async () => {
+  try {
+    const res = await IncomeAPI.getIncomes();
+    const list = res?.data || res || [];
+
+    // Convert JSON -> CSV string
+    if (!list.length) return alert("No income data available to download");
+
+    const headers = Object.keys(list[0]);
+    const csvRows = [
+      headers.join(","), // header line
+      ...list.map(obj =>
+        headers.map(header => JSON.stringify(obj[header] ?? "")).join(",")
+      ),
+    ];
+
+    const csvString = csvRows.join("\n");
+
+    // create downloadable CSV file
+    const blob = new Blob([csvString], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "income_details.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error("Error downloading income data:", error);
+     toast.error('Failed to download income data');
+  }
+};
+
     return (
         <section className={`mb-20 flex-col  ${internalActiveSection === "Income" ? "flex" : "hidden"}`}>
             <div className={`bg-white shadow-md overflow-hidden rounded-2xl m-8 p-8 transition flex-col justify-center`}>
@@ -176,7 +210,7 @@ const Income = () => {
             <div className="flex-1 bg-white rounded-2xl m-8 p-5 shadow hover:shadow-md transition">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-lg">Income Sources</h3>
-                    <button className="text-sm text-gray-600 border border-gray-400 cursor-pointer px-2 rounded-md hover:border-purple-600 hover:text-purple-600 flex items-center transition-colors gap-1">
+                    <button onClick={handleDownload} className="text-sm text-gray-600 border border-gray-400 cursor-pointer px-2 rounded-md hover:border-purple-600 hover:text-purple-600 flex items-center transition-colors gap-1">
                         download <Download size={16} />
                     </button>
                 </div>
@@ -193,7 +227,7 @@ const Income = () => {
                                     <p className="text-sm text-gray-500">{new Date(t.createdAt || t.date).toLocaleDateString()}</p>
                                 </div>
                             </div>
-                            <div>
+                            <div className='flex justify-center items-center'>
                                 {Number(t.amount) > 0 ? (
                                     <p className="text-green-600 bg-green-100 rounded-lg px-2 font-medium flex items-center gap-1">
                                         +${Number(t.amount).toLocaleString()} <ArrowUpRight size={14} />
@@ -203,6 +237,20 @@ const Income = () => {
                                         -${Math.abs(Number(t.amount)).toLocaleString()} <ArrowDownRight size={14} />
                                     </p>
                                 )}
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            await IncomeAPI.deleteIncome(t._id || t.id);
+                                            await refreshIncomes();
+                                        } catch (err) {
+                                            console.error("Failed to delete income", err);
+                                        }
+                                    }}
+                                    className="ml-4 flex items-center gap-2 text-sm text-white bg-red-500 hover:bg-red-600 active:scale-95 transition-all px-4 py-1.5 rounded-md shadow-sm"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                </button>
                             </div>
                         </li>
                     ))}
