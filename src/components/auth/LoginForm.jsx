@@ -45,7 +45,7 @@ const LoginForm = ({ onChange }) => {
             Welcome Back
           </h1>
           <p className="text-gray-600 text-sm">
-            Please enter your details to log in
+            Please enter your details
           </p>
         </div>
 
