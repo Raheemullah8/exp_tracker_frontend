@@ -6,6 +6,8 @@ const AppContext = createContext();
 export const ContextProvider = ({ children }) => {
 
     const [internalActiveSection, setInternalActiveSection] = useState("Dashboard");
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false); // ADD THIS LINE
+    
     // User state: store minimal user object and token
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
@@ -45,6 +47,8 @@ export const ContextProvider = ({ children }) => {
         <AppContext.Provider value={{
             internalActiveSection,
             setInternalActiveSection,
+            isMobileSidebarOpen,        // ADD THIS LINE
+            setIsMobileSidebarOpen,      // ADD THIS LINE
             user,
             token,
             setUser: (u) => setAuth(u, token),
