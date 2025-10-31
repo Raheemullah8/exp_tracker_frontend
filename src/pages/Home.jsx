@@ -2,7 +2,6 @@ import Header from '../components/Header'
 import Sidebar from '../components/Sidebar'
 import Dashboard from '../components/Dashboard'
 import Income from '../components/Income'
-import { useState } from 'react'
 import Expenses from '../components/Expenses'
 
 const Home = () => {
