@@ -4,5 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: './', // 👈 relative path zaroori hai!
+  build: {
+    outDir: 'dist'
+  },
 })
